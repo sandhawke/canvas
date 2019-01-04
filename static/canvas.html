@@ -51,7 +51,7 @@
       var height = canvas.height = window.innerHeight-85;
       var ctx = canvas.getContext('2d');
 
-      ctx.fillStyle = 'rgb(0,0,0)';
+      ctx.fillStyle = 'rgb(220, 209, 191)'; // sorta color of cotton canvas
       ctx.fillRect(0,0,width,height);
 
       var colorPicker = document.querySelector('input[type="color"]');
@@ -96,16 +96,41 @@
 
       function draw() {
         if(pressed) {
-          ctx.fillStyle = colorPicker.value;
+/*          ctx.fillStyle = colorPicker.value;
           ctx.beginPath();
           ctx.arc(curX, curY-85, sizePicker.value, degToRad(0), degToRad(360), false);
-          ctx.fill();
+          ctx.fill(); */
+      const shape = { type: 'circle', x: curX, y: curY-85, radius: sizePicker.value, color: colorPicker.value }
+      fetch('/canvas.json', { method: 'post', body: JSON.stringify(shape), headers: { "Content-Type": "application/json"} })
+      paint(shape, '#FFF')
         }
 
         requestAnimationFrame(draw);
       }
 
       draw();
+
+      function paint(item, outline) {
+        if (item.type === 'circle') {
+          ctx.beginPath();
+          ctx.arc(item.x, item.y, item.radius, degToRad(0), degToRad(360), false);
+      if (outline) {
+      ctx.strokeStyle = outline
+      ctx.stroke() } else {
+          ctx.fillStyle = item.color
+      
+      ctx.fill() }
+        }
+      }
+      
+      const source = new EventSource('/canvas.json.webdup')
+      source.addEventListener('add', event => {
+        for (const item of JSON.parse(event.data)) {
+          console.log(item)
+          paint(item)
+        }
+      })
+
 
     </script>
   </body>
